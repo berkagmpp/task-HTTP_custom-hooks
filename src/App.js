@@ -1,59 +1,48 @@
 import React, { useEffect, useState } from 'react';
 
+import useHttp from './hooks/use-http';
 import Tasks from './components/Tasks/Tasks';
 import NewTask from './components/NewTask/NewTask';
 
 function App() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [tasks, setTasks] = useState([]);
+    const [tasks, setTasks] = useState([]);
 
-  const fetchTasks = async (taskText) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(
-        'https://react-task-add-76dca-default-rtdb.asia-southeast1.firebasedatabase.app/tasks.json'
-      );
+    const transformTask = (tasksObj) => {
+        const loadedTasks = [];
 
-      if (!response.ok) {
-        throw new Error('Request failed!');
-      }
+            for (const taskKey in tasksObj) {
+                loadedTasks.push({ id: taskKey, text: tasksObj[taskKey].text });
+            }
 
-      const data = await response.json();
+            setTasks(loadedTasks);
+    };
 
-      const loadedTasks = [];
+    const { isLoading, error, sendRequest: fetchTasks } = useHttp({   // should call return obj of useHTTP / sendRequest is fn, so named differently: fetchTasks
+        url: 'https://react-task-add-76dca-default-rtdb.asia-southeast1.firebasedatabase.app/tasks.json',
+        // other requestConfig (method, body ...) are not needed because this request is 'GET',
+        // and we set requestConfig obj is flexible if there are not existing other requestConfig in useHTTP using '?'
+        transformTask
+    });
 
-      for (const taskKey in data) {
-        loadedTasks.push({ id: taskKey, text: data[taskKey].text });
-      }
+    useEffect(() => {
+        fetchTasks();
+    }, []);     // React doesn't know fetchTasks fn, so should add a dependancy
 
-      setTasks(loadedTasks);
-    } catch (err) {
-      setError(err.message || 'Something went wrong!');
-    }
-    setIsLoading(false);
-  };
+    const taskAddHandler = (task) => {
+        setTasks((prevTasks) => prevTasks.concat(task));
+    };
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  const taskAddHandler = (task) => {
-    setTasks((prevTasks) => prevTasks.concat(task));
-  };
-
-  return (
-    <React.Fragment>
-      <NewTask onAddTask={taskAddHandler} />
-      <Tasks
-        items={tasks}
-        loading={isLoading}
-        error={error}
-        onFetch={fetchTasks}
-      />
-    </React.Fragment>
-  );
+    return (
+        <React.Fragment>
+            <NewTask onAddTask={taskAddHandler} />
+            <Tasks
+                items={tasks}
+                loading={isLoading}
+                error={error}
+                onFetch={fetchTasks}
+            />
+        </React.Fragment>
+    );
 }
 
 export default App;
