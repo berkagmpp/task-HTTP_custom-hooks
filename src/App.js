@@ -17,12 +17,12 @@ function App() {
             setTasks(loadedTasks);
     };
 
-    const { isLoading, error, sendRequest: fetchTasks } = useHttp({   // should call return obj of useHTTP / sendRequest is fn, so named differently: fetchTasks
-        url: 'https://react-task-add-76dca-default-rtdb.asia-southeast1.firebasedatabase.app/tasks.json',
+    const { isLoading, error, sendRequest: fetchTasks } = useHttp(   // should call return obj of useHTTP / sendRequest is fn, so named differently: fetchTasks
+        { url: 'https://react-http-custom-hook-ae7a6-default-rtdb.firebaseio.com/tasks.json' },
         // other requestConfig (method, body ...) are not needed because this request is 'GET',
         // and we set requestConfig obj is flexible if there are not existing other requestConfig in useHTTP using '?'
         transformTask
-    });
+    );
 
     useEffect(() => {
         fetchTasks();
